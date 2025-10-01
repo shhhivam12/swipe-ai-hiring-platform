@@ -17,7 +17,7 @@ import io
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=["https://swipe-ai-interview.vercel.app"])
+CORS(app, resources={r"/api/*": {"origins": ["https://swipe-ai-interview.vercel.app", "http://localhost:3000"]}}, supports_credentials=True)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
