@@ -16,7 +16,7 @@
 
 [🌐 Live Demo](https://your-deployment-url.vercel.app) • [📖 Documentation](./DEPLOYMENT_GUIDE.md) • [🐛 Report Bug](https://github.com/yourusername/swipe-hiring-platform/issues) • [✨ Request Feature](https://github.com/yourusername/swipe-hiring-platform/issues)
 
-![SwipeHiring Banner](https://via.placeholder.com/1200x400/2754ff/ffffff?text=SwipeHiring+-+AI+Interview+Platform)
+![SwipeHiring Banner](./screenshots/banner.png)
 
 </div>
 
@@ -311,7 +311,8 @@ In Vercel Dashboard:
 
 ### 🏠 Landing Page
 
-![Landing Page](https://via.placeholder.com/800x500/2754ff/ffffff?text=Landing+Page+with+Floating+Emojis)
+![Landing Page](./screenshots/landing.png)
+
 
 *Modern landing page with animated emojis and glassmorphic navbar*
 
@@ -319,7 +320,7 @@ In Vercel Dashboard:
 
 ### 💼 Interview Interface
 
-![Interview Interface](https://via.placeholder.com/800x500/2754ff/ffffff?text=AI+Interview+Interface)
+![Interview Interface](./screenshots/interview.png)
 
 *Real-time AI interview with TTS and speech recognition*
 
@@ -327,7 +328,7 @@ In Vercel Dashboard:
 
 ### 📊 Dashboard
 
-![Dashboard](https://via.placeholder.com/800x500/2754ff/ffffff?text=Interviewer+Dashboard)
+![Dashboard](./screenshots/dashboard.png)
 
 *Comprehensive analytics and candidate management*
 
@@ -335,7 +336,7 @@ In Vercel Dashboard:
 
 ### 📱 Mobile Responsive
 
-<img src="https://via.placeholder.com/300x600/2754ff/ffffff?text=Mobile+View" alt="Mobile View" width="300"/>
+<img src="./screenshots/mobile.png" alt="Mobile View" width="300"/>
 
 *Fully optimized for mobile devices*
 
@@ -519,14 +520,14 @@ Contributions are what make the open-source community such an amazing place to l
 
 <div align="center">
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/swipe-hiring-platform?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/swipe-hiring-platform?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/yourusername/swipe-hiring-platform?style=social)
+![GitHub stars](https://img.shields.io/github/stars/shhhivam12/swipe-hiring-platform?style=social)
+![GitHub forks](https://img.shields.io/github/forks/shhhivam12/swipe-hiring-platform?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/shhhivam12/swipe-hiring-platform?style=social)
 
-![GitHub repo size](https://img.shields.io/github/repo-size/yourusername/swipe-hiring-platform)
-![GitHub language count](https://img.shields.io/github/languages/count/yourusername/swipe-hiring-platform)
-![GitHub top language](https://img.shields.io/github/languages/top/yourusername/swipe-hiring-platform)
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/swipe-hiring-platform)
+![GitHub repo size](https://img.shields.io/github/repo-size/shhhivam12/swipe-hiring-platform)
+![GitHub language count](https://img.shields.io/github/languages/count/shhhivam12/swipe-hiring-platform)
+![GitHub top language](https://img.shields.io/github/languages/top/shhhivam12/swipe-hiring-platform)
+![GitHub last commit](https://img.shields.io/github/last-commit/shhhivam12/swipe-hiring-platform)
 
 </div>
 
@@ -561,7 +562,7 @@ copies or substantial portions of the Software.
 ### **Shivam Mahendru**
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/shivam-mahendru-5b212b203)
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yourusername)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/shhhivam12)
 [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=todoist&logoColor=white)](https://yourportfolio.com)
 
 *Full Stack Developer | AI Enthusiast | Open Source Contributor*
@@ -599,7 +600,7 @@ Give a ⭐️ if this project helped you!
 
 <div align="center">
 
-### Made with ❤️ by [Shivam Mahendru](https://github.com/yourusername)
+### Made with ❤️ by [Shivam Mahendru](https://github.com/shhhivam12)
 
 **© 2025 SwipeHiring. All rights reserved.**
 
