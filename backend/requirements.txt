@@ -1,0 +1,12 @@
+Flask
+Flask-CORS
+python-dotenv
+requests
+supabase
+groq
+email-validator
+pytest
+pytest-flask
+smtplib
+PyPDF2
+python-docx

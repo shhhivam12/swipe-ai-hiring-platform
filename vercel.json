@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/favicon.png",
+      "dest": "/favicon.png"
+    },
+    {
+      "src": "/main_logo.png",
+      "dest": "/main_logo.png"
+    },
+    {
+      "src": "/1.png",
+      "dest": "/1.png"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "REACT_APP_SUPABASE_URL": "@swipe-supabase-url",
+    "REACT_APP_SUPABASE_ANON_KEY": "@swipe-supabase-anon-key",
+    "REACT_APP_BACKEND_URL": "@swipe-backend-url"
+  }
+}
