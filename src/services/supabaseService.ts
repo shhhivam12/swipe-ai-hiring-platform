@@ -282,11 +282,20 @@ export const supabaseService = {
     jobId: string,
     questions: Question[],
     currentQuestionIndex: number,
-    isCompleted: boolean = false
+    isCompleted: boolean = false,
+    summary?: string
   ): Promise<boolean> {
-    console.info('[Supabase:saveInterviewProgress] start', { usingSupabase: Boolean(supabase), studentId, jobId, isCompleted });
+    console.info('[Supabase:saveInterviewProgress] start', { 
+      usingSupabase: Boolean(supabase), 
+      studentId, 
+      jobId, 
+      isCompleted,
+      questionsCount: questions.length,
+      hasSummary: Boolean(summary)
+    });
+    
     if (!supabase) {
-      console.warn('Supabase not available, progress saved locally only');
+      console.warn('[Supabase:saveInterviewProgress] Supabase not available, progress saved locally only');
       return true;
     }
 
@@ -309,7 +318,14 @@ export const supabaseService = {
         ? questions.reduce((sum, q) => sum + (q.score || 0), 0) / questions.length 
         : 0;
 
-      const interviewData = {
+      console.info('[Supabase:saveInterviewProgress] calculated data', {
+        answersCount: answers.length,
+        scoresCount: scores.length,
+        finalScore: finalScore.toFixed(2),
+        summaryLength: summary?.length || 0
+      });
+
+      const interviewData: any = {
         job_id: jobId,
         student_id: studentId,
         answers,
@@ -319,31 +335,76 @@ export const supabaseService = {
         completed_at: isCompleted ? new Date().toISOString() : null,
       };
 
+      // Add summary if provided
+      if (summary) {
+        interviewData.summary = summary;
+      }
+
+      console.info('[Supabase:saveInterviewProgress] checking for existing interview...');
+      
       // Check if interview already exists
-      const { data: existingInterview } = await supabase
+      const { data: existingInterview, error: selectError } = await supabase
         .from('interviews')
         .select('id')
         .eq('job_id', jobId)
         .eq('student_id', studentId)
         .single();
 
-      if (existingInterview) {
-        // Update existing interview
-        await supabase
-          .from('interviews')
-          .update(interviewData)
-          .eq('id', existingInterview.id);
-      } else {
-        // Create new interview
-        await supabase
-          .from('interviews')
-          .insert([interviewData]);
+      if (selectError && selectError.code !== 'PGRST116') {
+        console.error('[Supabase:saveInterviewProgress] error checking existing interview', selectError);
       }
 
-      console.info('[Supabase:saveInterviewProgress] success', { created: !existingInterview, updated: Boolean(existingInterview) });
+      if (existingInterview) {
+        console.info('[Supabase:saveInterviewProgress] updating existing interview', { interviewId: existingInterview.id });
+        
+        // Update existing interview
+        const { data: updateData, error: updateError } = await supabase
+          .from('interviews')
+          .update(interviewData)
+          .eq('id', existingInterview.id)
+          .select();
+
+        if (updateError) {
+          console.error('[Supabase:saveInterviewProgress] update error', updateError);
+          throw updateError;
+        }
+        
+        console.info('[Supabase:saveInterviewProgress] ✅ UPDATE SUCCESS', { 
+          interviewId: existingInterview.id,
+          finalScore: updateData?.[0]?.final_score,
+          status: updateData?.[0]?.status
+        });
+      } else {
+        console.info('[Supabase:saveInterviewProgress] creating new interview record...');
+        
+        // Create new interview
+        const { data: insertData, error: insertError } = await supabase
+          .from('interviews')
+          .insert([interviewData])
+          .select();
+
+        if (insertError) {
+          console.error('[Supabase:saveInterviewProgress] insert error', insertError);
+          throw insertError;
+        }
+        
+        console.info('[Supabase:saveInterviewProgress] ✅ INSERT SUCCESS', { 
+          interviewId: insertData?.[0]?.id,
+          finalScore: insertData?.[0]?.final_score,
+          status: insertData?.[0]?.status
+        });
+      }
+
+      console.info('[Supabase:saveInterviewProgress] ✅ COMPLETE - Data saved to Supabase successfully');
       return true;
-    } catch (error) {
-      console.error('[Supabase:saveInterviewProgress] error', error);
+    } catch (error: any) {
+      console.error('[Supabase:saveInterviewProgress] ❌ ERROR', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: error
+      });
       return false;
     }
   },

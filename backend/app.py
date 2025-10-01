@@ -513,40 +513,75 @@ def generate_summary():
                     for i, ans in enumerate(answers)
                 ])
                 
-                prompt = f"""Based on this interview performance, provide a final assessment:
+                # Determine performance level for better summary
+                performance_level = "excellent" if final_score >= 8 else "good" if final_score >= 6 else "adequate" if final_score >= 4 else "needs improvement"
+                
+                prompt = f"""You are a professional technical interviewer. Based on this interview performance, provide a final assessment.
 
 Candidate: {candidate.get('name', 'Unknown')}
 Job Position: {job.get('title', 'Developer')}
 Average Score: {final_score:.1f}/10
+Performance Level: {performance_level}
 
 Interview Answers:
 {answers_text}
 
-Provide a JSON response with:
-- final_score: {final_score:.1f} (use this exact value)
-- summary: A 2-3 sentence professional summary of the candidate's performance, strengths, and areas for improvement
+IMPORTANT: Provide ONLY a valid JSON response with NO additional text before or after.
 
-JSON format: {{"final_score": {final_score:.1f}, "summary": "..."}}"""
+Requirements:
+1. Write a 2-3 sentence professional summary that:
+   - Reflects the actual score ({final_score:.1f}/10)
+   - Is honest about performance (don't be overly positive for low scores)
+   - Mentions specific strengths if score >= 6
+   - Mentions areas for improvement if score < 6
+   - Is constructive and professional
+
+2. Output ONLY this JSON (no markdown, no code blocks, no extra text):
+{{"final_score": {final_score:.1f}, "summary": "your summary here"}}"""
                 
-                response = call_groq_api(prompt, max_tokens=300)
+                logger.info(f"[Summary] Calling Groq API for candidate: {candidate.get('name', 'Unknown')}, score: {final_score:.1f}")
+                response = call_groq_api(prompt, max_tokens=400)
+                logger.info(f"[Summary] Raw Groq response: {response[:200]}...")
                 
                 try:
-                    result = json.loads(response)
+                    # Try to extract JSON if wrapped in markdown code blocks
+                    cleaned_response = response.strip()
+                    if cleaned_response.startswith('```'):
+                        # Remove markdown code blocks
+                        cleaned_response = re.sub(r'^```(?:json)?\s*', '', cleaned_response)
+                        cleaned_response = re.sub(r'\s*```$', '', cleaned_response)
+                    
+                    result = json.loads(cleaned_response)
+                    logger.info(f"[Summary] ✅ Successfully parsed JSON summary")
                     return jsonify({
                         'final_score': float(result.get('final_score', final_score)),
                         'summary': result.get('summary', f'Candidate {candidate.get("name", "Unknown")} demonstrated solid technical knowledge with an average score of {final_score:.1f}/10.')
                     })
-                except (json.JSONDecodeError, ValueError):
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.error(f"[Summary] ❌ JSON parse error: {e}, Response: {response}")
                     # Fall back to mock summary
                     pass
                     
             except Exception as e:
-                logger.error(f"Groq API failed: {e}")
+                logger.error(f"[Summary] ❌ Groq API failed: {e}")
         
-        # Mock summary as fallback
+        # Dynamic fallback summary based on score
+        logger.warning(f"[Summary] Using fallback summary for score: {final_score:.1f}")
+        
+        candidate_name = candidate.get("name", "The candidate")
+        
+        if final_score >= 8:
+            summary = f'{candidate_name} demonstrated excellent technical knowledge with an outstanding score of {final_score:.1f}/10. The candidate showed strong understanding of core concepts and provided comprehensive, well-articulated responses throughout the interview.'
+        elif final_score >= 6:
+            summary = f'{candidate_name} demonstrated good technical knowledge with a solid score of {final_score:.1f}/10. The candidate showed competent understanding of key concepts, though there is room for deeper exploration in some areas.'
+        elif final_score >= 4:
+            summary = f'{candidate_name} demonstrated basic technical knowledge with a score of {final_score:.1f}/10. While the candidate grasped fundamental concepts, significant improvement is needed in depth of understanding and practical application.'
+        else:
+            summary = f'{candidate_name} scored {final_score:.1f}/10, indicating limited technical knowledge for this position. The candidate would benefit from further study and practice in the core concepts required for this role before reapplying.'
+        
         return jsonify({
             'final_score': round(final_score, 1),
-            'summary': f'Candidate {candidate.get("name", "Unknown")} demonstrated solid technical knowledge with an average score of {final_score:.1f}/10. The candidate showed good understanding of core concepts and provided thoughtful responses throughout the interview.'
+            'summary': summary
         })
         
     except Exception as e:

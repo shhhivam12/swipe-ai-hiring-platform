@@ -232,21 +232,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onInterviewComplete, sele
   };
 
   const handleFinalCompletion = async () => {
+    console.log('[ChatInterface] handleFinalCompletion started', {
+      questionsCount: questions.length,
+      candidateName: candidateInfo?.name,
+      jobTitle: selectedJob?.title
+    });
+
     try {
       // Exit fullscreen before processing
       exitFullscreen();
 
+      console.log('[ChatInterface] Evaluating all answers with AI...');
       // Now evaluate all answers using LLM
       const evaluatedQuestions = await questionService.evaluateAllAnswers(
         questions,
         selectedJob?.title || 'Position'
       );
 
+      console.log('[ChatInterface] Evaluation complete', {
+        evaluatedCount: evaluatedQuestions.length,
+        scores: evaluatedQuestions.map(q => q.score)
+      });
+
       // Calculate final score from evaluated answers
       const finalScore = evaluatedQuestions.length > 0 
         ? evaluatedQuestions.reduce((sum, q) => sum + (q.score || 0), 0) / evaluatedQuestions.length 
         : 0;
 
+      console.log('[ChatInterface] Final score calculated:', finalScore.toFixed(2));
+
+      console.log('[ChatInterface] Generating professional summary...');
       // Generate professional summary
       const summaryData = await questionService.generateFinalSummary(
         evaluatedQuestions.map(q => ({
@@ -258,14 +273,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onInterviewComplete, sele
         { title: selectedJob?.title || 'Position' }
       );
 
-      // Pass data to parent with evaluated questions
-      onInterviewComplete({
+      console.log('[ChatInterface] Summary generated', {
+        finalScore: summaryData.final_score,
+        summaryLength: summaryData.summary?.length
+      });
+
+      const completionData = {
         finalScore: summaryData.final_score || finalScore,
         summary: summaryData.summary || 'Interview completed successfully.',
         questions: evaluatedQuestions,
+      };
+
+      console.log('[ChatInterface] ✅ Calling onInterviewComplete with data:', {
+        finalScore: completionData.finalScore,
+        summaryLength: completionData.summary.length,
+        questionsWithScores: completionData.questions.length
       });
-    } catch (error) {
-      console.error('Failed to evaluate interview:', error);
+
+      // Pass data to parent with evaluated questions
+      onInterviewComplete(completionData);
+    } catch (error: any) {
+      console.error('[ChatInterface] ❌ Failed to evaluate interview:', {
+        message: error?.message,
+        stack: error?.stack,
+        fullError: error
+      });
       exitFullscreen();
       // Still pass the data even if evaluation fails
       onInterviewComplete({

@@ -143,14 +143,27 @@ export class QuestionService {
 
   public async generateFinalSummary(answers: Array<{ question: string; candidate_answer: string; score: number }>, candidate: { name: string; email: string }, job: { title: string }): Promise<{ final_score: number; summary: string }> {
     try {
+      console.log('[questionService] Requesting summary from backend...', {
+        answersCount: answers.length,
+        candidateName: candidate.name,
+        jobTitle: job.title
+      });
+      
       const response = await apiService.generateSummary({
         answers,
         candidate,
         job,
       });
+      
+      console.log('[questionService] ✅ Summary received from backend:', {
+        finalScore: response.final_score,
+        summaryLength: response.summary?.length,
+        summaryPreview: response.summary?.substring(0, 100) + '...'
+      });
+      
       return response;
     } catch (error) {
-      console.error('Failed to generate summary:', error);
+      console.error('[questionService] ❌ Failed to generate summary:', error);
       return this.getMockSummary(answers, candidate);
     }
   }

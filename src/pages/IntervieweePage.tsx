@@ -146,25 +146,63 @@ const IntervieweePage: React.FC = () => {
   };
 
   const handleInterviewComplete = async (interviewData: { finalScore: number; summary: string; questions: any[] }) => {
+    console.log('[IntervieweePage] handleInterviewComplete called', {
+      finalScore: interviewData.finalScore,
+      summaryLength: interviewData.summary?.length,
+      questionsCount: interviewData.questions?.length,
+      candidateEmail: candidateInfo?.email,
+      jobId: selectedJob?.id
+    });
+
     try {
       // Save to database
       if (candidateInfo && selectedJob) {
+        console.log('[IntervieweePage] Saving interview data to Supabase...');
+        
         // First, ensure student exists in database
         let student = await supabaseService.getStudent(candidateInfo.email);
+        console.log('[IntervieweePage] Student lookup result:', { found: Boolean(student), studentId: student?.id });
+        
         if (!student) {
+          console.log('[IntervieweePage] Creating new student record...');
           student = await supabaseService.createStudent(candidateInfo);
+          console.log('[IntervieweePage] Student created:', { studentId: student?.id });
         }
 
         if (student) {
-          // Save interview data
-          await supabaseService.saveInterviewProgress(
+          console.log('[IntervieweePage] Calling saveInterviewProgress...', {
+            studentId: student.id,
+            jobId: selectedJob.id,
+            questionsCount: interviewData.questions.length,
+            isCompleted: true,
+            hasSummary: Boolean(interviewData.summary)
+          });
+          
+          // Save interview data with summary
+          const saveResult = await supabaseService.saveInterviewProgress(
             student.id!,
             selectedJob.id,
             interviewData.questions,
             interviewData.questions.length - 1,
-            true
+            true,
+            interviewData.summary  // Pass the summary
           );
+          
+          console.log('[IntervieweePage] Save result:', { success: saveResult });
+          
+          if (saveResult) {
+            console.log('[IntervieweePage] ✅ Interview data saved successfully to Supabase!');
+          } else {
+            console.error('[IntervieweePage] ❌ Failed to save interview data to Supabase');
+          }
+        } else {
+          console.error('[IntervieweePage] ❌ Failed to create/get student record');
         }
+      } else {
+        console.warn('[IntervieweePage] Missing candidateInfo or selectedJob', {
+          hasCandidateInfo: Boolean(candidateInfo),
+          hasSelectedJob: Boolean(selectedJob)
+        });
       }
 
       // Update Redux state
@@ -173,9 +211,14 @@ const IntervieweePage: React.FC = () => {
         summary: interviewData.summary,
       }));
 
+      console.log('[IntervieweePage] Moving to results page...');
       setCurrentStep('results');
-    } catch (error) {
-      console.error('Failed to complete interview:', error);
+    } catch (error: any) {
+      console.error('[IntervieweePage] ❌ Error in handleInterviewComplete:', {
+        message: error?.message,
+        stack: error?.stack,
+        fullError: error
+      });
       // Still show results even if save fails
       setCurrentStep('results');
     }
