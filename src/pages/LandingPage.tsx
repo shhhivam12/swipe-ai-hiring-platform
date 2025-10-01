@@ -384,7 +384,7 @@ const LandingPage: React.FC = () => {
               background: theme.colors.gray[100]
             }}>
               <iframe
-                src="https://www.youtube.com/watch?v=cZkhqFPl_ow"
+                src="https://www.youtube.com/embed/cZkhqFPl_ow"
                 title="How Swipe AI Works"
                 style={{
                   position: 'absolute',
