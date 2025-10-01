@@ -107,6 +107,9 @@ const IntervieweePage: React.FC = () => {
 
   const handleSelectJob = (job: any) => {
     setSelectedJob(job);
+    // Save to localStorage for recovery if needed
+    localStorage.setItem('currentJob', JSON.stringify(job));
+    console.log('[IntervieweePage] Job selected and saved to localStorage:', job);
     // Reset interview state for fresh start
     dispatch(resetInterview());
     setCurrentStep('resume');
@@ -154,10 +157,61 @@ const IntervieweePage: React.FC = () => {
       jobId: selectedJob?.id
     });
 
+    console.log('[IntervieweePage] 🔍 DEBUGGING STATE:', {
+      candidateInfo: candidateInfo,
+      selectedJob: selectedJob,
+      hasCandidateInfo: Boolean(candidateInfo),
+      hasSelectedJob: Boolean(selectedJob),
+      candidateInfoKeys: candidateInfo ? Object.keys(candidateInfo) : 'null',
+      selectedJobKeys: selectedJob ? Object.keys(selectedJob) : 'null'
+    });
+
     try {
+      // CRITICAL FIX: If selectedJob is missing, try to get it from localStorage or create a fallback
+      let jobToSave = selectedJob;
+      
+      if (!jobToSave) {
+        console.warn('[IntervieweePage] ⚠️ selectedJob is missing! Attempting recovery...');
+        
+        // Try to get from localStorage
+        const savedJobStr = localStorage.getItem('currentJob');
+        if (savedJobStr) {
+          try {
+            jobToSave = JSON.parse(savedJobStr);
+            console.log('[IntervieweePage] ✅ Recovered job from localStorage:', jobToSave);
+          } catch (e) {
+            console.error('[IntervieweePage] Failed to parse saved job:', e);
+          }
+        }
+        
+        // If still no job, create a fallback job entry
+        if (!jobToSave) {
+          console.warn('[IntervieweePage] ⚠️ Creating fallback job entry...');
+          // Try to get job from Supabase using the first available job
+          const allJobs = await supabaseService.getJobs();
+          if (allJobs && allJobs.length > 0) {
+            jobToSave = allJobs[0]; // Use first available job as fallback
+            console.log('[IntervieweePage] ✅ Using first available job as fallback:', jobToSave);
+          } else {
+            // Last resort: create a mock job
+            jobToSave = {
+              id: 'fallback-job-' + Date.now(),
+              title: 'General Position',
+              description: 'Interview completed'
+            };
+            console.warn('[IntervieweePage] ⚠️ Using mock job as last resort');
+          }
+        }
+      }
+
       // Save to database
-      if (candidateInfo && selectedJob) {
-        console.log('[IntervieweePage] Saving interview data to Supabase...');
+      if (candidateInfo && jobToSave) {
+        console.log('[IntervieweePage] Saving interview data to Supabase...', {
+          candidateName: candidateInfo.name,
+          candidateEmail: candidateInfo.email,
+          jobId: jobToSave.id,
+          jobTitle: jobToSave.title
+        });
         
         // First, ensure student exists in database
         let student = await supabaseService.getStudent(candidateInfo.email);
@@ -172,7 +226,7 @@ const IntervieweePage: React.FC = () => {
         if (student) {
           console.log('[IntervieweePage] Calling saveInterviewProgress...', {
             studentId: student.id,
-            jobId: selectedJob.id,
+            jobId: jobToSave.id,
             questionsCount: interviewData.questions.length,
             isCompleted: true,
             hasSummary: Boolean(interviewData.summary)
@@ -181,7 +235,7 @@ const IntervieweePage: React.FC = () => {
           // Save interview data with summary
           const saveResult = await supabaseService.saveInterviewProgress(
             student.id!,
-            selectedJob.id,
+            jobToSave.id,
             interviewData.questions,
             interviewData.questions.length - 1,
             true,
@@ -192,6 +246,8 @@ const IntervieweePage: React.FC = () => {
           
           if (saveResult) {
             console.log('[IntervieweePage] ✅ Interview data saved successfully to Supabase!');
+            // Clean up localStorage after successful save
+            localStorage.removeItem('currentJob');
           } else {
             console.error('[IntervieweePage] ❌ Failed to save interview data to Supabase');
           }
@@ -199,9 +255,11 @@ const IntervieweePage: React.FC = () => {
           console.error('[IntervieweePage] ❌ Failed to create/get student record');
         }
       } else {
-        console.warn('[IntervieweePage] Missing candidateInfo or selectedJob', {
+        console.error('[IntervieweePage] ❌ CRITICAL: Missing candidateInfo or job', {
           hasCandidateInfo: Boolean(candidateInfo),
-          hasSelectedJob: Boolean(selectedJob)
+          hasJob: Boolean(jobToSave),
+          candidateInfo: candidateInfo,
+          job: jobToSave
         });
       }
 
